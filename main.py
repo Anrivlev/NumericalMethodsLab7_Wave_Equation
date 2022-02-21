@@ -3,6 +3,20 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 
+def initial_conditions1():
+    u0 = lambda x, t: t + x ** 2 + np.arcsin(t * (x - 1) / 2)  # exact solution
+    phi = lambda x: x ** 2  # first initial condition, u(x, 0)
+    phi2 = lambda x: 2  # second derivative of phi(x)
+    psi = lambda x: (x + 1) / 2  # second initial condition, u_t(x, 0)
+    # u_tt = a**2 * u_xx + f(x, t)
+    f = lambda x, t: -2 + ((2 * t * ((x - 1) ** 3) - (t ** 3) * (x - 1)) / ((4 - (t ** 2) * ((x - 1) ** 2)) ** (3 / 2)))
+    # alpha[0] * u(0, t) + beta[0] * u_x(0, t) = mu[0](t)
+    # alpha[1] * u(1, t) + beta[1] * u_x(1, t) = mu[1](t)
+    alpha = np.array([1, 1])
+    beta = np.array([0, 2])
+    gamma = np.array([lambda t: t - np.arcsin(t / 2), lambda t: 5 + 2 * t])
+    return u0, phi, phi2, psi, f, alpha, beta, gamma
+
 def least_squares(x, y):
     n = len(x)
 
@@ -52,26 +66,16 @@ def animation():
     t_max = 10.
     h = 0.01
     N = int((x_max - x_min) // h)  # number of points
-    x_range = np.linspace(x_min, x_max, N + 1)
+    x_range = np.linspace(x_min, x_max, N)
     C = 0.5
     a = np.sqrt(1/2)
     tau = C * h / a
     first_layer = first_layer_second_order
     next_layer = next_layer_second_order
 
-    u0 = lambda x, t: t + x**2 + np.arcsin(t*(x-1) / 2)  # exact solution
-    phi = lambda x: x**2  # first initial condition, u(x, 0)
-    phi2 = lambda x: 0  # second derivative of phi(x)
-    psi = lambda x: (x + 1) / 2  # second initial condition, u_t(x, 0)
-    # u_tt = a**2 * u_xx + f(x, t)
-    f = lambda x, t: -2 + ((2*t*((x-1)**3) - (t**3)*(x-1)) / ((4 - (t**2)*((x - 1)**2))**(3/2)))
-    # alpha[0] * u(0, t) + beta[0] * u_x(0, t) = mu[0](t)
-    # alpha[1] * u(1, t) + beta[1] * u_x(1, t) = mu[1](t)
-    alpha = np.array([1, 1])
-    beta = np.array([0, 2])
-    gamma = np.array([lambda t: t - np.arcsin(t/2), lambda t: 5 + 2*t])
+    u0, phi, phi2, psi, f, alpha, beta, gamma = initial_conditions1()
 
-    u = np.zeros((3, N + 1))
+    u = np.zeros((3, N))
     u[0] = phi(x_range)
     u[1] = first_layer(u[0], tau, psi, x_range, phi2, f, a)
     u[2] = next_layer(u[0:2], f, alpha, beta, gamma, a, h, tau, t_min + 2 * tau)
@@ -108,39 +112,29 @@ def order_of_approximation():
     x_min = 0.
     x_max = 1.
     t_min = 0.
-    t_max = 0.1
-    h_min = 0.005
-    h_max = 0.1
-    h_step = 0.001
+    Nt = 100
+    h_min = 0.0001
+    h_max = 0.01
+    h_step = 0.0001
     Nh = int((h_max - h_min) // h_step)
-    h_range = np.linspace(h_min, h_max, Nh + 1)
+    h_range = np.linspace(h_min, h_max, Nh)
     C = 0.5
     a = np.sqrt(1 / 2)
     first_layer = first_layer_first_order
     next_layer = next_layer_first_order
 
-    u0 = lambda x, t: t + x ** 2 + np.arcsin(t * (x - 1) / 2)  # exact solution
-    phi = lambda x: x ** 2  # first initial condition, u(x, 0)
-    phi2 = lambda x: 0  # second derivative of phi(x)
-    psi = lambda x: (x + 1) / 2  # second initial condition, u_t(x, 0)
-    # u_tt = a**2 * u_xx + f(x, t)
-    f = lambda x, t: -2 + ((2 * t * ((x - 1) ** 3) - (t ** 3) * (x - 1)) / ((4 - (t ** 2) * ((x - 1) ** 2)) ** (3 / 2)))
-    # alpha[0] * u(0, t) + beta[0] * u_x(0, t) = mu[0](t)
-    # alpha[1] * u(1, t) + beta[1] * u_x(1, t) = mu[1](t)
-    alpha = np.array([1, 1])
-    beta = np.array([0, 2])
-    gamma = np.array([lambda t: t - np.arcsin(t / 2), lambda t: 5 + 2 * t])
+    u0, phi, phi2, psi, f, alpha, beta, gamma = initial_conditions1()
 
     error = np.zeros(len(h_range))
 
     for h, i in zip(h_range, range(len(h_range))):
         print(h)
         N = int((x_max - x_min) // h)  # number of points
-        x_range = np.linspace(x_min, x_max, N + 1)
+        x_range = np.linspace(x_min, x_max, N)
         tau = C * h / a
-        Nt = int((t_max - t_min) // tau)
-        t_range = np.linspace(t_min + 2 * tau, t_max, Nt + 1)
-        u = np.zeros((3, N + 1))
+        t_max = t_min + tau * Nt
+        t_range = np.linspace(t_min + 2 * tau, t_max, Nt)
+        u = np.zeros((3, N))
         u[0] = phi(x_range)
         u[1] = first_layer(u[0], tau, psi, x_range, phi2, f, a)
         u[2] = next_layer(u[0:2], f, alpha, beta, gamma, a, h, tau, t_min + 2 * tau)
