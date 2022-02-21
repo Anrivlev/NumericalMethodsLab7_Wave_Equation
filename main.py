@@ -22,8 +22,8 @@ def next_layer_first_order(u_prev, f,  alpha, beta, gamma, a,  h, tau, t_now):
     u = np.zeros(len(u_prev[0]))
     for i in range(1, len(u) - 1):
         u[i] = 2 * u_prev[1, i] - u_prev[0, i] + ((a * tau / h)**2) * (u_prev[1, i + 1] - 2 * u_prev[1, i] + u_prev[1, i - 1]) + tau**2 * f(i * h, t_now)
-    u[0] = (gamma[0](t_now + tau) - beta[0] * u[1] / h) / (alpha[0] - beta[0] / h)
-    u[-1] = (gamma[1](t_now + tau) + beta[1] * u[-2] / h) / (alpha[1] + beta[1] / h)
+    u[0] = (gamma[0](t_now) - beta[0] * u[1] / h) / (alpha[0] - beta[0] / h)
+    u[-1] = (gamma[1](t_now) + beta[1] * u[-2] / h) / (alpha[1] + beta[1] / h)
     return u
 
 
@@ -32,8 +32,8 @@ def next_layer_second_order(u_prev, f,  alpha, beta, gamma, a,  h, tau, t_now):
     for i in range(1, len(u) - 1):
         u[i] = 2 * u_prev[1, i] - u_prev[0, i] + ((a * tau / h) ** 2) * (
                     u_prev[1, i + 1] - 2 * u_prev[1, i] + u_prev[1, i - 1]) + tau ** 2 * f(i * h, t_now)
-    u[0] = (gamma[0](t_now + tau) + (beta[0] / (2 * h)) * (u[2] - 4 * u[1])) / ((alpha[1] - 3 * beta[0]) / (2 * h))
-    u[-1] = (gamma[1](t_now + tau) + (beta[1] / (2 * h)) * (4 * u[-2] - u[-3])) / (alpha[1] + (3 * beta[1]) / (2 * h))
+    u[0] = (gamma[0](t_now) + (beta[0] / (2 * h)) * (u[2] - 4 * u[1])) / ((alpha[1] - 3 * beta[0]) / (2 * h))
+    u[-1] = (gamma[1](t_now) + (beta[1] / (2 * h)) * (4 * u[-2] - u[-3])) / (alpha[1] + (3 * beta[1]) / (2 * h))
     return u
 
 
@@ -52,7 +52,7 @@ def animation():
     t_max = 10.
     h = 0.01
     N = int((x_max - x_min) // h)  # number of points
-    x_range = np.linspace(x_min, x_max, N)
+    x_range = np.linspace(x_min, x_max, N + 1)
     C = 0.5
     a = np.sqrt(1/2)
     tau = C * h / a
@@ -71,7 +71,7 @@ def animation():
     beta = np.array([0, 2])
     gamma = np.array([lambda t: t - np.arcsin(t/2), lambda t: 5 + 2*t])
 
-    u = np.zeros((3, N))
+    u = np.zeros((3, N + 1))
     u[0] = phi(x_range)
     u[1] = first_layer(u[0], tau, psi, x_range, phi2, f, a)
     u[2] = next_layer(u[0:2], f, alpha, beta, gamma, a, h, tau, t_min + 2 * tau)
@@ -113,11 +113,11 @@ def order_of_approximation():
     h_max = 0.1
     h_step = 0.001
     Nh = int((h_max - h_min) // h_step)
-    h_range = np.linspace(h_min, h_max, Nh)
+    h_range = np.linspace(h_min, h_max, Nh + 1)
     C = 0.5
     a = np.sqrt(1 / 2)
-    first_layer = first_layer_second_order
-    next_layer = next_layer_second_order
+    first_layer = first_layer_first_order
+    next_layer = next_layer_first_order
 
     u0 = lambda x, t: t + x ** 2 + np.arcsin(t * (x - 1) / 2)  # exact solution
     phi = lambda x: x ** 2  # first initial condition, u(x, 0)
@@ -136,11 +136,11 @@ def order_of_approximation():
     for h, i in zip(h_range, range(len(h_range))):
         print(h)
         N = int((x_max - x_min) // h)  # number of points
-        x_range = np.linspace(x_min, x_max, N)
+        x_range = np.linspace(x_min, x_max, N + 1)
         tau = C * h / a
         Nt = int((t_max - t_min) // tau)
-        t_range = np.linspace(t_min + 2 * tau, t_max, Nt)
-        u = np.zeros((3, N))
+        t_range = np.linspace(t_min + 2 * tau, t_max, Nt + 1)
+        u = np.zeros((3, N + 1))
         u[0] = phi(x_range)
         u[1] = first_layer(u[0], tau, psi, x_range, phi2, f, a)
         u[2] = next_layer(u[0:2], f, alpha, beta, gamma, a, h, tau, t_min + 2 * tau)
