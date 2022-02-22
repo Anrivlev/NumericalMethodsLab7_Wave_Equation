@@ -163,4 +163,5 @@ def order_of_approximation():
 
 
 if __name__ == '__main__':
-    order_of_approximation()
+    order_of_approximation()  # Call it in order to check the order of approximation
+    # animation()  # Call it in order to draw solution.gif
