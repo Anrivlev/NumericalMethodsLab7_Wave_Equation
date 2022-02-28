@@ -52,9 +52,9 @@ def next_layer_first_order(u_prev, f,  alpha, beta, gamma, a,  h, tau, t_now):
     u = np.zeros(len(u_prev[0]))
     for i in range(1, len(u) - 1):
         u[i] = 2 * u_prev[1, i] - u_prev[0, i] + ((a * tau / h)**2) * (u_prev[1, i + 1] - 2 * u_prev[1, i] + u_prev[1, i - 1]) + tau**2 * f(i * h, t_now - tau)
-    u[0] = (gamma[0](t_now - tau) - beta[0] * u[1] / h) / (alpha[0] - beta[0] / h)
+    u[0] = (gamma[0](t_now) - beta[0] * u[1] / h) / (alpha[0] - beta[0] / h)
     print(u[0])
-    u[-1] = (gamma[1](t_now - tau) + beta[1] * u[-2] / h) / (alpha[1] + beta[1] / h)
+    u[-1] = (gamma[1](t_now) + beta[1] * u[-2] / h) / (alpha[1] + beta[1] / h)
     return u
 
 
@@ -63,8 +63,8 @@ def next_layer_second_order(u_prev, f,  alpha, beta, gamma, a,  h, tau, t_now):
     for i in range(1, len(u) - 1):
         u[i] = 2 * u_prev[1, i] - u_prev[0, i] + ((a * tau / h) ** 2) * (
                     u_prev[1, i + 1] - 2 * u_prev[1, i] + u_prev[1, i - 1]) + tau ** 2 * f(i * h, t_now - tau)
-    u[0] = (gamma[0](t_now - tau) + ((beta[0] / (2 * h)) * (u[2] - 4 * u[1]))) / (alpha[0] - ((3 * beta[0]) / (2 * h)))
-    u[-1] = (gamma[1](t_now - tau) + (beta[1] / (2 * h)) * (4 * u[-2] - u[-3])) / (alpha[1] + ((3 * beta[1]) / (2 * h)))
+    u[0] = (gamma[0](t_now) + ((beta[0] / (2 * h)) * (u[2] - 4 * u[1]))) / (alpha[0] - ((3 * beta[0]) / (2 * h)))
+    u[-1] = (gamma[1](t_now) + (beta[1] / (2 * h)) * (4 * u[-2] - u[-3])) / (alpha[1] + ((3 * beta[1]) / (2 * h)))
     return u
 
 
