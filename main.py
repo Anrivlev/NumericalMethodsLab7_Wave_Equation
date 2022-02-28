@@ -18,6 +18,21 @@ def initial_conditions1():
     return u0, phi, phi2, psi, f, alpha, beta, gamma
 
 
+def initial_conditions2():
+    u0 = lambda x, t: (5 / 2) * np.tanh(x - t)  # exact solution
+    phi = lambda x: (5 / 2) * np.tanh(x)  # first initial condition, u(x, 0)
+    phi2 = lambda x: -5 * np.tanh(x) / (np.cosh(x)**2)  # second derivative of phi(x)
+    psi = lambda x: -5 / (2 * np.cosh(x)**3)  # second initial condition, u_t(x, 0)
+    # u_tt = a**2 * u_xx + f(x, t)
+    f = lambda x, t: (5 / 2) * (np.tanh(t - x)) / (np.cosh(t - x)**2)
+    # alpha[0] * u(0, t) + beta[0] * u_x(0, t) = gamma[0](t)
+    # alpha[1] * u(1, t) + beta[1] * u_x(1, t) = gamma[1](t)
+    alpha = np.array([2, 0])
+    beta = np.array([-1, 1])
+    gamma = np.array([lambda t: -5 * np.tanh(t) - (5 / (2 * np.cosh(t)**2)), lambda t: 5 / (2 * np.cosh(1 - t)**2)])
+    return u0, phi, phi2, psi, f, alpha, beta, gamma
+
+
 def least_squares(x, y):
     n = len(x)
 
@@ -37,9 +52,9 @@ def next_layer_first_order(u_prev, f,  alpha, beta, gamma, a,  h, tau, t_now):
     u = np.zeros(len(u_prev[0]))
     for i in range(1, len(u) - 1):
         u[i] = 2 * u_prev[1, i] - u_prev[0, i] + ((a * tau / h)**2) * (u_prev[1, i + 1] - 2 * u_prev[1, i] + u_prev[1, i - 1]) + tau**2 * f(i * h, t_now - tau)
-    u[0] = (gamma[0](t_now) - beta[0] * u[1] / h) / (alpha[0] - beta[0] / h)
+    u[0] = (gamma[0](t_now - tau) - beta[0] * u[1] / h) / (alpha[0] - beta[0] / h)
     print(u[0])
-    u[-1] = (gamma[1](t_now) + beta[1] * u[-2] / h) / (alpha[1] + beta[1] / h)
+    u[-1] = (gamma[1](t_now - tau) + beta[1] * u[-2] / h) / (alpha[1] + beta[1] / h)
     return u
 
 
@@ -48,8 +63,8 @@ def next_layer_second_order(u_prev, f,  alpha, beta, gamma, a,  h, tau, t_now):
     for i in range(1, len(u) - 1):
         u[i] = 2 * u_prev[1, i] - u_prev[0, i] + ((a * tau / h) ** 2) * (
                     u_prev[1, i + 1] - 2 * u_prev[1, i] + u_prev[1, i - 1]) + tau ** 2 * f(i * h, t_now - tau)
-    u[0] = (gamma[0](t_now) + ((beta[0] / (2 * h)) * (u[2] - 4 * u[1]))) / (alpha[0] - (3 * beta[0]) / (2 * h))
-    u[-1] = (gamma[1](t_now) + (beta[1] / (2 * h)) * (4 * u[-2] - u[-3])) / (alpha[1] + (3 * beta[1]) / (2 * h))
+    u[0] = (gamma[0](t_now - tau) + ((beta[0] / (2 * h)) * (u[2] - 4 * u[1]))) / (alpha[0] - ((3 * beta[0]) / (2 * h)))
+    u[-1] = (gamma[1](t_now - tau) + (beta[1] / (2 * h)) * (4 * u[-2] - u[-3])) / (alpha[1] + ((3 * beta[1]) / (2 * h)))
     return u
 
 
@@ -100,7 +115,7 @@ def animation():
             u[1] = u[2]
             u[2] = next_layer(u[0:2], f, alpha, beta, gamma, a, h, tau, t_now)
             y = u[2]
-        # y = y - u0(x_range, t_now) #  if there is need to plot the error
+        # y = y - u0(x_range, t_now)  # if there is need to plot the error
         line.set_data(x, y)
         return line,
 
@@ -114,13 +129,13 @@ def order_of_approximation():
     x_min = 0.
     x_max = 1.
     t_min = 0.
-    Nt = 10
+    Nt = 50
     h_min = 0.001
     h_max = 0.01
     h_step = 0.001
     Nh = int((h_max - h_min) // h_step)
     h_range = np.linspace(h_min, h_max, Nh)
-    C = 0.5
+    C = 0.01
     a = np.sqrt(1 / 2)
     first_layer = first_layer_second_order
     next_layer = next_layer_second_order
@@ -163,5 +178,5 @@ def order_of_approximation():
 
 
 if __name__ == '__main__':
-    order_of_approximation()  # Call it in order to check the order of approximation
-    # animation()  # Call it in order to draw solution.gif
+    # order_of_approximation()  # Call it in order to check the order of approximation
+    animation()  # Call it in order to draw solution.gif
