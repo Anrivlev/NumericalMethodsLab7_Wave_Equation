@@ -60,11 +60,19 @@ def next_layer_first_order(u_prev, f,  alpha, beta, gamma, a,  h, tau, t_now):
 
 def next_layer_second_order(u_prev, f,  alpha, beta, gamma, a,  h, tau, t_now):
     u = np.zeros(len(u_prev[0]))
+    c = (tau * a / h) ** 2
     for i in range(1, len(u) - 1):
-        u[i] = 2 * u_prev[1, i] - u_prev[0, i] + ((a * tau / h) ** 2) * (
-                    u_prev[1, i + 1] - 2 * u_prev[1, i] + u_prev[1, i - 1]) + tau ** 2 * f(i * h, t_now - tau)
-    u[0] = (gamma[0](t_now) + ((beta[0] / (2 * h)) * (u[2] - 4 * u[1]))) / (alpha[0] - ((3 * beta[0]) / (2 * h)))
-    u[-1] = (gamma[1](t_now) + (beta[1] / (2 * h)) * (4 * u[-2] - u[-3])) / (alpha[1] + ((3 * beta[1]) / (2 * h)))
+        u[i] = 2 * u_prev[1, i] - u_prev[0, i] + c * (u_prev[1, i + 1] - 2 * u_prev[1, i] + u_prev[1, i - 1]) + tau**2 * f(i * h, t_now - tau)
+    # u[0] = (gamma[0](t_now) + ((beta[0] / (2 * h)) * (u[2] - 4 * u[1]))) / (alpha[0] - ((3 * beta[0]) / (2 * h)))
+    # u[-1] = (gamma[1](t_now) + (beta[1] / (2 * h)) * (4 * u[-2] - u[-3])) / (alpha[1] + ((3 * beta[1]) / (2 * h)))
+    if beta[0] == 0:
+        u[0] = gamma[0](t_now) / alpha[0]
+    else:
+        u[0] = 2 * c * (u_prev[1, 1] + u_prev[1, 0] * (h * alpha[0] / beta[0] - 1) - h * gamma[0](t_now - tau) / beta[0]) + tau**2 * f(0., t_now - tau) + 2 * u_prev[1, 0] - u_prev[0, 0]
+    if beta[1] == 0:
+        u[-1] = gamma[1](t_now) / alpha[1]
+    else:
+        u[-1] = 2 * c * (u_prev[1, -2] - u_prev[1, -1] * (h * alpha[1] / beta[1] + 1) + h * gamma[1](t_now - tau) / beta[1]) + tau**2 * f(1., t_now - tau) + 2 * u_prev[1, -1] - u_prev[0, -1]
     return u
 
 
@@ -129,13 +137,13 @@ def order_of_approximation():
     x_min = 0.
     x_max = 1.
     t_min = 0.
-    Nt = 50
+    Nt = 25
     h_min = 0.001
     h_max = 0.01
     h_step = 0.001
     Nh = int((h_max - h_min) // h_step)
     h_range = np.linspace(h_min, h_max, Nh)
-    C = 0.01
+    C = 0.5
     a = np.sqrt(1 / 2)
     first_layer = first_layer_second_order
     next_layer = next_layer_second_order
@@ -178,5 +186,5 @@ def order_of_approximation():
 
 
 if __name__ == '__main__':
-    # order_of_approximation()  # Call it in order to check the order of approximation
-    animation()  # Call it in order to draw solution.gif
+    order_of_approximation()  # Call it in order to check the order of approximation
+    # animation()  # Call it in order to draw solution.gif
