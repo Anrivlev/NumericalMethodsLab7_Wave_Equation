@@ -64,10 +64,19 @@ def next_layer_second_order(u_prev, f,  alpha, beta, gamma, a,  h, tau, t_now):
     for i in range(1, len(u) - 1):
         u[i] = 2 * u_prev[1, i] - u_prev[0, i] + c * (u_prev[1, i + 1] - 2 * u_prev[1, i] + u_prev[1, i - 1]) + tau**2 * f(i * h, t_now - tau)
         # u[i] = (tau**2)*((u_prev[1, i + 1]-2*u_prev[1, i]+u_prev[1, i - 1])/(2*h**2)+f((i-1)*h, t_now - 2 * tau))+2*u_prev[1, i]-u_prev[0, i]
-    u[0] = (gamma[0](t_now) + ((beta[0] / (2 * h)) * (u[2] - 4 * u[1]))) / (alpha[0] - ((3 * beta[0]) / (2 * h)))
-    u[-1] = (gamma[1](t_now) + (beta[1] / (2 * h)) * (4 * u[-2] - u[-3])) / (alpha[1] + ((3 * beta[1]) / (2 * h)))
-    # u[0] = 2 * c * (u_prev[1, 1] + u_prev[1, 0] * (h * alpha[0] / beta[0] - 1) - h * gamma[0](t_now) / beta[0]) + tau**2 * f(0., t_now) + 2 * u_prev[1, 0] - u_prev[0, 0]
-    # u[-1] = 2 * c * (u_prev[1, -2] - u_prev[1, -1] * (h * alpha[1] / beta[1] + 1) + h * gamma[1](t_now) / beta[1]) + tau**2 * f(1., t_now) + 2 * u_prev[1, -1] - u_prev[0, -1]
+    # u[0] = (gamma[0](t_now) + ((beta[0] / (2 * h)) * (u[2] - 4 * u[1]))) / (alpha[0] - ((3 * beta[0]) / (2 * h)))
+    # u[-1] = (gamma[1](t_now) + (beta[1] / (2 * h)) * (4 * u[-2] - u[-3])) / (alpha[1] + ((3 * beta[1]) / (2 * h)))
+    if beta[0] == 0:
+        u[0] = gamma[0](t_now) / alpha[0]
+    else:
+        u[0] = 2 * c * (u_prev[1, 1] + u_prev[1, 0] * (h * alpha[0] / beta[0] - 1) - h * gamma[0](t_now) / beta[
+            0]) + tau ** 2 * f(0., t_now) + 2 * u_prev[1, 0] - u_prev[0, 0]
+    if beta[1] == 0:
+        u[-1] = gamma[1](t_now) / alpha[1]
+    else:
+        u[-1] = 2 * c * (
+                    u_prev[1, -2] - u_prev[1, -1] * (h * alpha[1] / beta[1] + 1) + h * gamma[1](t_now) / beta[
+                1]) + tau ** 2 * f(1., t_now) + 2 * u_prev[1, -1] - u_prev[0, -1]
     return u
 
 
@@ -132,7 +141,7 @@ def order_of_approximation():
     x_min = 0.
     x_max = 1.
     t_min = 0.
-    Nt = 10
+    Nt = 25
     h_range = np.array([0.00025, 0.0005, 0.001, 0.002, 0.0025, 0.005, 0.01, 0.02, 0.025, 0.05])
     C = 1.
     a = np.sqrt(1 / 2)
@@ -155,7 +164,6 @@ def order_of_approximation():
         u[1] = first_layer(u[0], tau, psi, x_range, phi2, f, a)
         u[2] = next_layer(u[0:2], f, alpha, beta, gamma, a, h, tau, t_min + 2 * tau)
         for t in t_range:
-            print(t, 3*tau)
             u[0] = u[1]
             u[1] = u[2]
             u[2] = next_layer(u[0:2], f, alpha, beta, gamma, a, h, tau, t)
