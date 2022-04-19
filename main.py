@@ -19,17 +19,49 @@ def initial_conditions1():
 
 
 def initial_conditions2():
-    u0 = lambda x, t: (5 / 2) * np.tanh(x - t)  # exact solution
-    phi = lambda x: (5 / 2) * np.tanh(x)  # first initial condition, u(x, 0)
-    phi2 = lambda x: -5 * np.tanh(x) / (np.cosh(x)**2)  # second derivative of phi(x)
-    psi = lambda x: -5 / (2 * np.cosh(x)**3)  # second initial condition, u_t(x, 0)
+    u0 = lambda x, t: 0  # exact solution
+    phi = lambda x: 0  # first initial condition, u(x, 0)
+    phi2 = lambda x: 0  # second derivative of phi(x)
+    psi = lambda x:0  # second initial condition, u_t(x, 0)
     # u_tt = a**2 * u_xx + f(x, t)
-    f = lambda x, t: (5 / 2) * (np.tanh(t - x)) / (np.cosh(t - x)**2)
+    f = lambda x, t: 0
     # alpha[0] * u(0, t) + beta[0] * u_x(0, t) = gamma[0](t)
     # alpha[1] * u(1, t) + beta[1] * u_x(1, t) = gamma[1](t)
-    alpha = np.array([2, 0])
-    beta = np.array([-1, 1])
-    gamma = np.array([lambda t: -5 * np.tanh(t) - (5 / (2 * np.cosh(t)**2)), lambda t: 5 / (2 * np.cosh(1 - t)**2)])
+    alpha = np.array([1, 1])
+    beta = np.array([0, 0])
+    gamma = np.array([lambda t: 1*np.sin(10*t) if (t < np.pi/10) else 0, lambda t: 2*np.sin(10*t) if (t < np.pi/10) else 0])
+    return u0, phi, phi2, psi, f, alpha, beta, gamma
+
+
+def initial_conditions3():
+    u0 = lambda x, t: 0 # exact solution
+    phi = lambda x: 0  # first initial condition, u(x, 0)
+    phi2 = lambda x: 0  # second derivative of phi(x)
+    psi = lambda x: 0  # second initial condition, u_t(x, 0)
+    # u_tt = a**2 * u_xx + f(x, t)
+    f = lambda x, t: 0
+    # alpha[0] * u(0, t) + beta[0] * u_x(0, t) = gamma[0](t)
+    # alpha[1] * u(1, t) + beta[1] * u_x(1, t) = gamma[1](t)
+    alpha = np.array([1, 1])
+    beta = np.array([0, 0])
+    gamma = np.array([lambda t: 1 if (t < np.pi / 10) else 0,
+                      lambda t: 2 if (t < 0) else 0])
+    return u0, phi, phi2, psi, f, alpha, beta, gamma
+
+
+def initial_conditions4():
+    u0 = lambda x, t: 0  # exact solution
+    phi = lambda x: np.array(list(map(lambda z: 3*z if (z < 0.5) else 3. - 3 * z, x)))  # first initial condition, u(x, 0)
+    phi2 = lambda x: 0  # second derivative of phi(x)
+    psi = lambda x: 0  # second initial condition, u_t(x, 0)
+    # u_tt = a**2 * u_xx + f(x, t)
+    f = lambda x, t: 0
+    # alpha[0] * u(0, t) + beta[0] * u_x(0, t) = gamma[0](t)
+    # alpha[1] * u(1, t) + beta[1] * u_x(1, t) = gamma[1](t)
+    alpha = np.array([1, 1])
+    beta = np.array([0, 0])
+    gamma = np.array([lambda t: 0,
+                      lambda t: 0])
     return u0, phi, phi2, psi, f, alpha, beta, gamma
 
 
@@ -51,7 +83,7 @@ def least_squares(x, y):
 def next_layer_first_order(u_prev, f,  alpha, beta, gamma, a,  h, tau, t_now):
     u = np.zeros(len(u_prev[0]))
     for i in range(1, len(u) - 1):
-        u[i] = 2 * u_prev[1, i] - u_prev[0, i] + ((a * tau / h)**2) * (u_prev[1, i + 1] - 2 * u_prev[1, i] + u_prev[1, i - 1]) + tau**2 * f(i * h, t_now - tau)
+        u[i] = 2 * u_prev[1, i] - u_prev[0, i] + ((a * tau / h)**2) * (u_prev[1, i + 1] - 2 * u_prev[1, i] + u_prev[1, i - 1]) + tau**2 * f(i * h, t_now)
     u[0] = (gamma[0](t_now) - beta[0] * u[1] / h) / (alpha[0] - beta[0] / h)
     print(u[0])
     u[-1] = (gamma[1](t_now) + beta[1] * u[-2] / h) / (alpha[1] + beta[1] / h)
@@ -62,8 +94,8 @@ def next_layer_second_order(u_prev, f,  alpha, beta, gamma, a,  h, tau, t_now):
     u = np.zeros(len(u_prev[0]))
     c = (tau * a / h) ** 2
     for i in range(1, len(u) - 1):
-        u[i] = 2 * u_prev[1, i] - u_prev[0, i] + c * (u_prev[1, i + 1] - 2 * u_prev[1, i] + u_prev[1, i - 1]) + tau**2 * f(i * h, t_now - tau)
-        # u[i] = (tau**2)*((u_prev[1, i + 1]-2*u_prev[1, i]+u_prev[1, i - 1])/(2*h**2)+f((i-1)*h, t_now - 2 * tau))+2*u_prev[1, i]-u_prev[0, i]
+        u[i] = 2 * u_prev[1, i] - u_prev[0, i] + c * (u_prev[1, i + 1] - 2 * u_prev[1, i] + u_prev[1, i - 1]) + tau**2 * f(i * h, t_now)
+        # u[i] = (tau**2)*((u_prev[1, i + 1]-2*u_prev[1, i]+u_prev[1, i - 1])/(2*h**2)+f((i-1)*h, t_now))+2*u_prev[1, i]-u_prev[0, i]
     # u[0] = (gamma[0](t_now) + ((beta[0] / (2 * h)) * (u[2] - 4 * u[1]))) / (alpha[0] - ((3 * beta[0]) / (2 * h)))
     # u[-1] = (gamma[1](t_now) + (beta[1] / (2 * h)) * (4 * u[-2] - u[-3])) / (alpha[1] + ((3 * beta[1]) / (2 * h)))
     if beta[0] == 0:
@@ -92,17 +124,17 @@ def animation():
     x_min = 0.
     x_max = 1.
     t_min = 0.
-    t_max = 2.
+    t_max = 4.
     h = 0.01
     N = int((x_max - x_min) // h)  # number of points
     x_range = np.linspace(x_min, x_max, N)
-    C = 0.5
+    C = 1.
     a = np.sqrt(1/2)
     tau = C * h / a
     first_layer = first_layer_second_order
     next_layer = next_layer_second_order
 
-    u0, phi, phi2, psi, f, alpha, beta, gamma = initial_conditions1()
+    u0, phi, phi2, psi, f, alpha, beta, gamma = initial_conditions4()
 
     u = np.zeros((3, N))
     u[0] = phi(x_range)
@@ -110,7 +142,7 @@ def animation():
     u[2] = next_layer(u[0:2], f, alpha, beta, gamma, a, h, tau, t_min + 2 * tau)
 
     fig = plt.figure()
-    ax = plt.axes(xlim=(x_min, x_max), ylim=(-3, 3))
+    ax = plt.axes(xlim=(x_min, x_max), ylim=(-2, 2))
     line, = ax.plot([], [], lw=3)
 
     def init():
@@ -129,11 +161,13 @@ def animation():
             y = u[2]
         # y = y - u0(x_range, t_now)  # if there is need to plot the error
         line.set_data(x, y)
+        print(t_now)
         return line,
 
     anim = FuncAnimation(fig, animate, init_func=init,
                          frames=int((t_max - t_min) // tau), interval=20, blit=True)
 
+    plt.show()
     anim.save('solution.gif', writer='imagemagick')
 
 
@@ -169,22 +203,22 @@ def order_of_approximation():
             u[2] = next_layer(u[0:2], f, alpha, beta, gamma, a, h, tau, t)
             error[i] = max(error[i], np.max(np.abs(u[2] - u0(x_range, t))))
 
-    h_range = np.log10(h_range)
-    error = np.log10(error)
+    #h_range = np.log10(h_range)
+    #error = np.log10(error)
 
     plt.suptitle('Зависимость логарифма абсолютной погрешности от логарифма шага интегрирования')
     plt.subplot(1, 1, 1)
     plt.xlabel("log(h)")
     plt.ylabel("log(max(|Δu|))")
     plt.grid()
-    plt.plot(h_range, error, color='k')
+    plt.loglog(h_range, error, color='k')
 
-    coeffs = least_squares(h_range, error)
+    coeffs = least_squares(np.log10(h_range), np.log10(error))
     print("linear regression", ": y(x) = ", coeffs[0], " + ", coeffs[1], "x", sep="")
 
     plt.show()
 
 
 if __name__ == '__main__':
-    order_of_approximation()  # Call it in order to check the order of approximation
-    # animation()  # Call it in order to draw solution.gif
+    # order_of_approximation()  # Call it in order to check the order of approximation
+    animation()  # Call it in order to draw solution.gif
