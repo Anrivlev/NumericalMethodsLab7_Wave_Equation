@@ -65,6 +65,22 @@ def initial_conditions4():
     return u0, phi, phi2, psi, f, alpha, beta, gamma
 
 
+def initial_conditions5():
+    u0 = lambda x, t: 0  # exact solution
+    phi = lambda x: 2*np.sin(2*np.pi*x/(1/3))  # first initial condition, u(x, 0)
+    phi2 = lambda x: 0  # second derivative of phi(x)
+    psi = lambda x: 0  # second initial condition, u_t(x, 0)
+    # u_tt = a**2 * u_xx + f(x, t)
+    f = lambda x, t: 0
+    # alpha[0] * u(0, t) + beta[0] * u_x(0, t) = gamma[0](t)
+    # alpha[1] * u(1, t) + beta[1] * u_x(1, t) = gamma[1](t)
+    alpha = np.array([1, 1])
+    beta = np.array([0, 0])
+    gamma = np.array([lambda t: 0,
+                      lambda t: 0])
+    return u0, phi, phi2, psi, f, alpha, beta, gamma
+
+
 def least_squares(x, y):
     n = len(x)
 
@@ -124,7 +140,7 @@ def animation():
     x_min = 0.
     x_max = 1.
     t_min = 0.
-    t_max = 4.
+    t_max = 40.
     h = 0.01
     N = int((x_max - x_min) // h)  # number of points
     x_range = np.linspace(x_min, x_max, N)
@@ -134,7 +150,7 @@ def animation():
     first_layer = first_layer_second_order
     next_layer = next_layer_second_order
 
-    u0, phi, phi2, psi, f, alpha, beta, gamma = initial_conditions4()
+    u0, phi, phi2, psi, f, alpha, beta, gamma = initial_conditions2()
 
     u = np.zeros((3, N))
     u[0] = phi(x_range)
